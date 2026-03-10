@@ -1,0 +1,34 @@
+{
+  "numeric_features": [
+    "no_of_trainings",
+    "age",
+    "previous_year_rating",
+    "length_of_service",
+    "KPIs_met_more_than_80",
+    "awards_won",
+    "avg_training_score",
+    "Budget",
+    "Actual Cost",
+    "Delay Days",
+    "Cost Overrun %",
+    "Tasks Completed",
+    "Productivity Score",
+    "Training Effectiveness",
+    "Experience Index",
+    "Priority_Scaled",
+    "Workload Pressure"
+  ],
+  "categorical_features": [
+    "department",
+    "education",
+    "Project Type",
+    "Priority"
+  ],
+  "target": "Hours Spent",
+  "test_size": 0.2,
+  "random_state": 42,
+  "metrics": {
+    "mae": 3.998000000000003,
+    "rmse": 5.617476657717417
+  }
+}
