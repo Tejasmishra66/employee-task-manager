@@ -1,379 +1,297 @@
-# Employee Task & Time Management System
+# TaskFlow Pro — Employee Task & Time Management System
 
-A production-ready FastAPI backend for IT companies to manage employees, projects, and tasks across foreign client engagements. Includes automatic time tracking, team dashboards, and an ML model that predicts how many hours a task will take before work begins.
-
----
-
-## Table of Contents
-
-1. [Architecture](#architecture)
-2. [Setup](#setup)
-3. [Running the Server](#running-the-server)
-4. [API Reference](#api-reference)
-   - [Health](#health)
-   - [Employees](#employees)
-   - [Projects](#projects)
-   - [Tasks](#tasks)
-   - [Dashboard](#dashboard)
-   - [ML Prediction](#ml-prediction)
-5. [ML Model](#ml-model)
-6. [Running Tests](#running-tests)
-7. [Field Reference](#field-reference)
+A full-stack web application for IT companies managing foreign client projects. Employees and managers can track tasks, log time automatically, monitor project budgets, and get ML-powered hour estimates — all from a single dashboard.
 
 ---
 
-## Architecture
+## Screenshots
+
+| Dashboard | Tasks (Kanban) | ML Predict |
+|---|---|---|
+| Live stats, charts, top employees | Kanban board with live timer | Hour estimation from employee + project data |
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Backend | FastAPI (Python 3.9+) |
+| Database | SQLite via SQLAlchemy ORM |
+| Validation | Pydantic v2 |
+| ML Model | scikit-learn RandomForestRegressor |
+| Frontend | Vanilla HTML / CSS / JavaScript (SPA) |
+| Charts | Chart.js |
+| Tests | pytest + httpx (30 tests, 0 warnings) |
+
+---
+
+## Project Structure
 
 ```
 employee/
 ├── backend/
-│   ├── app.py                  ← FastAPI entry point, all routes
+│   ├── app.py                    ← FastAPI entry point + all routes + frontend serving
 │   ├── database/
-│   │   ├── db_config.py        ← SQLAlchemy engine + session
-│   │   └── models.py           ← ORM: Employee, Project, Task
+│   │   ├── db_config.py          ← SQLAlchemy engine, session, get_db()
+│   │   └── models.py             ← ORM models: Employee, Project, Task
 │   ├── schemas/
-│   │   ├── employee_schema.py  ← Pydantic I/O for Employee
-│   │   ├── project_schema.py   ← Pydantic I/O for Project
-│   │   ├── task_schema.py      ← Pydantic I/O for Task
-│   │   ├── dashboard_schema.py ← Dashboard response shape
-│   │   └── predict_schema.py   ← ML request / response
+│   │   ├── employee_schema.py    ← Pydantic Create / Update / Response
+│   │   ├── project_schema.py
+│   │   ├── task_schema.py
+│   │   ├── dashboard_schema.py
+│   │   └── predict_schema.py
 │   ├── services/
-│   │   ├── employee_Service.py ← Employee CRUD logic
-│   │   ├── project_service.py  ← Project CRUD logic
-│   │   └── task_service.py     ← Task CRUD + lifecycle + dashboard
+│   │   ├── employee_Service.py   ← Employee CRUD + sub-route logic
+│   │   ├── project_service.py    ← Project CRUD + sub-route logic
+│   │   └── task_service.py       ← Task CRUD, start/stop lifecycle, dashboard aggregation
 │   ├── ml/
-│   │   ├── train_models.py     ← Train & save the RandomForest pipeline
-│   │   ├── predict.py          ← Load model, serve predictions
-│   │   └── save_models/        ← model.joblib + metadata.json (after training)
+│   │   ├── train_models.py       ← Train RandomForest pipeline from CSV, save to disk
+│   │   ├── predict.py            ← Load saved model, serve predictions
+│   │   └── save_models/          ← model.joblib + metadata.json (after training)
 │   └── utils/
-│       ├── preprocessing.py    ← Load & clean the CSV dataset
-│       └── feature_engineering.py ← Feature lists + derived columns
+│       ├── preprocessing.py      ← Load and clean final_dataset_with_features.csv
+│       └── feature_engineering.py← Feature lists, derived columns, input row builder
+├── frontend/
+│   ├── index.html                ← SPA shell (Chart.js + Font Awesome via CDN)
+│   ├── style.css                 ← Dark-theme design system (CSS variables + Grid)
+│   └── app.js                    ← Full SPA: router, API client, all 5 pages
 ├── test/
-│   ├── test_api.py             ← 16 integration tests (TestClient)
-│   └── test_service.py         ← 14 unit tests (service layer)
+│   ├── test_api.py               ← 16 integration tests (FastAPI TestClient)
+│   └── test_service.py           ← 14 unit tests (in-memory SQLite)
 ├── final_dataset_with_features.csv
-├── tasks.db                    ← SQLite database (auto-created)
+├── tasks.db                      ← SQLite database (auto-created on first run)
 └── requirements.txt
 ```
 
-**Tech stack:** FastAPI · SQLAlchemy · SQLite · Pydantic v2 · scikit-learn · pandas · pytest
-
 ---
 
-## Setup
+## Quick Start
+
+### 1. Clone and set up environment
 
 ```powershell
-# 1. Create and activate a virtual environment
+git clone <your-repo-url>
+cd employee
+
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 
-# 2. Install all dependencies
 pip install -r requirements.txt
+```
 
-# 3. Train the ML model (one-time, ~10 seconds)
+### 2. Train the ML model (one-time)
+
+```powershell
 python -m backend.ml.train_models
 ```
 
-The training script prints MAE and RMSE, then saves the model to `backend/ml/save_models/`.
+Output:
+```
+Loading dataset...
+Training model...
+MAE : 3.998 hours
+RMSE: 5.617 hours
+Model saved to: backend/ml/save_models/model.joblib
+```
 
----
-
-## Running the Server
-
-Always run from the **project root** (`e:\6 month internship\employee`):
+### 3. Start the server
 
 ```powershell
 uvicorn backend.app:app --reload --host 0.0.0.0 --port 8000
 ```
 
-- **Swagger UI (interactive docs):** http://localhost:8000/docs
-- **ReDoc:** http://localhost:8000/redoc
-- The SQLite database (`tasks.db`) and all three tables are created automatically on first startup.
+### 4. Open in browser
+
+```
+http://localhost:8000/
+```
+
+That is the only URL you need. The full dashboard opens immediately.
+
+---
+
+## URLs
+
+| URL | What opens |
+|---|---|
+| `http://localhost:8000/` | Full interactive frontend dashboard |
+| `http://localhost:8000/docs` | Swagger UI — try every API endpoint live |
+| `http://localhost:8000/redoc` | ReDoc API documentation |
+| `http://localhost:8000/health` | JSON health check `{"status":"ok"}` |
+
+---
+
+## Frontend Pages
+
+### Dashboard
+- 6 stat cards — total tasks, completed, in-progress, hours logged, employees, projects
+- Tasks by Status doughnut chart (Chart.js)
+- Tasks by Priority bar chart
+- Top employees performance table
+- Project overview table with budget tracking
+
+### Employees
+- Card grid with avatar, department, KPI badges, award badges
+- Live search filter
+- Add / Edit (full form modal) / Delete
+
+### Projects
+- Cards with dual progress bars — task completion % and budget utilisation %
+- Budget bar turns red automatically when over 90% spent
+- Add / Edit / Delete
+
+### Tasks — Kanban Board
+- Three columns: **Pending** · **In Progress** · **Completed**
+- **Start** button stamps `start_time` and begins a live running clock
+- **Stop** button stamps `end_time` and auto-calculates `measured_hours`
+- Every active task shows an updating `HH:MM:SS` counter
+- Add / Edit / Delete tasks
+
+### ML Predict
+- Full input form: employee profile + project context
+- One-click prediction shows estimated hours in a result panel
+- Model MAE and RMSE shown live
+- Feature list pulled from `/model-info`
+
+---
+
+## Running Tests
+
+```powershell
+# All 30 tests
+python -m pytest test/ -v
+
+# Integration tests only (API layer)
+python -m pytest test/test_api.py -v
+
+# Unit tests only (service layer)
+python -m pytest test/test_service.py -v
+```
+
+Expected: **30 passed, 0 warnings**
+
+Tests run against an isolated in-memory SQLite database. The production `tasks.db` is never touched.
 
 ---
 
 ## API Reference
 
-All request bodies are JSON. All responses are JSON.
-
----
+All request and response bodies are JSON. Base URL: `http://localhost:8000`
 
 ### Health
 
-#### `GET /`
-
-Confirms the server is running.
-
-**Response**
-```json
-{
-  "status": "ok",
-  "message": "Employee Task & Time Management API v2.0"
-}
-```
+| Method | Route | Description |
+|---|---|---|
+| `GET` | `/health` | JSON status ping |
 
 ---
 
 ### Employees
 
-#### `POST /employees` — Create employee
+| Method | Route | Description |
+|---|---|---|
+| `GET` | `/employees` | List all employees |
+| `POST` | `/employees` | Create employee |
+| `GET` | `/employees/{id}` | Get one employee |
+| `PUT` | `/employees/{id}` | Update employee fields |
+| `DELETE` | `/employees/{id}` | Delete employee |
+| `GET` | `/employees/{id}/tasks` | All tasks assigned to this employee |
 
-**Request body**
-```json
-{
-  "name": "Alice Dev",
-  "department": "Technology",
-  "education": "Bachelor's",
-  "age": 27,
-  "previous_year_rating": 4.5,
-  "length_of_service": 3,
-  "no_of_trainings": 2,
-  "KPIs_met_more_than_80": 1,
-  "awards_won": 0,
-  "avg_training_score": 72.0
-}
-```
+**Create / Update fields:**
 
-| Field | Type | Required | Description |
+| Field | Type | Required | Notes |
 |---|---|---|---|
-| `name` | string | **yes** | Full name |
-| `department` | string | yes | e.g. Technology, Management, Analytics |
-| `education` | string | yes | e.g. Bachelor's, Master's |
-| `age` | int | no | Age in years |
-| `previous_year_rating` | float | no | 1.0–5.0 performance rating |
+| `name` | string | yes | Full name |
+| `department` | string | yes | Technology / Management / Analytics / Design / QA / DevOps |
+| `education` | string | yes | Bachelor's / Master's / PhD / Diploma |
+| `age` | int | no | |
+| `previous_year_rating` | float | no | 1.0 – 5.0 |
 | `length_of_service` | int | no | Years at company |
-| `no_of_trainings` | int | no | Trainings completed (default 0) |
-| `KPIs_met_more_than_80` | int | no | 1 = KPIs met >80%, 0 = not met |
-| `awards_won` | int | no | 1 = won award, 0 = none |
-| `avg_training_score` | float | no | 0–100 average training score |
-
-**Response** `201 Created` — full employee object with `id`.
-
----
-
-#### `GET /employees` — List all employees
-
-No body. Returns array of employee objects.
-
----
-
-#### `GET /employees/{id}` — Get one employee
-
-Returns a single employee or `404` if not found.
-
----
-
-#### `PUT /employees/{id}` — Update employee
-
-Send only the fields you want to change:
-```json
-{ "department": "Full Stack", "previous_year_rating": 5.0 }
-```
-
----
-
-#### `DELETE /employees/{id}` — Remove employee
-
-Returns `{ "detail": "Employee 1 deleted" }`.
-
----
-
-#### `GET /employees/{id}/tasks` — All tasks assigned to this employee
-
-Returns array of task objects. Useful for a personal task board.
+| `no_of_trainings` | int | no | Default 0 |
+| `KPIs_met_more_than_80` | int | no | 1 = yes, 0 = no |
+| `awards_won` | int | no | 1 = yes, 0 = no |
+| `avg_training_score` | float | no | 0 – 100 |
 
 ---
 
 ### Projects
 
-#### `POST /projects` — Create project
+| Method | Route | Description |
+|---|---|---|
+| `GET` | `/projects` | List all projects |
+| `POST` | `/projects` | Create project |
+| `GET` | `/projects/{id}` | Get one project |
+| `PUT` | `/projects/{id}` | Update project fields |
+| `DELETE` | `/projects/{id}` | Delete project |
+| `GET` | `/projects/{id}/tasks` | All tasks under this project |
 
-**Request body**
-```json
-{
-  "name": "Client Portal v2",
-  "project_type": "Web App",
-  "priority": "High",
-  "status": "In Progress",
-  "start_date": "2025-01-10T09:00:00",
-  "planned_completion_date": "2025-06-30T18:00:00",
-  "budget": 150000.0
-}
-```
+**Create / Update fields:**
 
-| Field | Type | Required | Description |
+| Field | Type | Required | Notes |
 |---|---|---|---|
-| `name` | string | **yes** | Project name |
-| `project_type` | string | **yes** | e.g. Web App, Mobile App, API Integration |
-| `priority` | string | no | Low / Medium / High / Critical (default Medium) |
-| `status` | string | no | In Progress / Completed / On Hold (default In Progress) |
-| `start_date` | datetime | no | ISO 8601 format |
-| `planned_completion_date` | datetime | no | ISO 8601 format |
-| `budget` | float | no | Total budget in currency units |
-
-**Response** `201 Created`.
-
----
-
-#### `GET /projects` — List all projects
-
-#### `GET /projects/{id}` — Get one project
-
-#### `PUT /projects/{id}` — Update project
-
-Commonly updated fields:
-```json
-{
-  "status": "Completed",
-  "actual_completion_date": "2025-07-01T12:00:00",
-  "actual_cost": 138000.0
-}
-```
-
-#### `DELETE /projects/{id}` — Remove project
-
-#### `GET /projects/{id}/tasks` — All tasks under this project
+| `name` | string | yes | |
+| `project_type` | string | yes | Web App / Mobile App / API Integration / Data Pipeline / E-Commerce |
+| `priority` | string | no | Low / Medium / High / Critical |
+| `status` | string | no | In Progress / Completed / On Hold |
+| `budget` | float | no | |
+| `actual_cost` | float | no | |
+| `start_date` | datetime | no | ISO 8601 |
+| `planned_completion_date` | datetime | no | ISO 8601 |
+| `actual_completion_date` | datetime | no | ISO 8601 |
 
 ---
 
 ### Tasks
 
-Tasks represent individual work items assigned to one employee under one project.
+| Method | Route | Description |
+|---|---|---|
+| `GET` | `/tasks` | List all tasks |
+| `POST` | `/tasks` | Create task |
+| `GET` | `/tasks/{id}` | Get one task |
+| `PUT` | `/tasks/{id}` | Update task fields |
+| `DELETE` | `/tasks/{id}` | Delete task |
+| `POST` | `/tasks/{id}/start` | Begin timing → status becomes **In Progress** |
+| `POST` | `/tasks/{id}/stop` | Stop timing → status becomes **Completed**, `measured_hours` auto-calculated |
 
-#### `POST /tasks` — Create task
+**Create fields:**
 
-**Request body**
-```json
-{
-  "title": "Build Login Page",
-  "description": "JWT-based auth with refresh tokens",
-  "priority": "High",
-  "employee_id": 1,
-  "project_id": 1
-}
-```
-
-| Field | Type | Required | Description |
+| Field | Type | Required | Notes |
 |---|---|---|---|
-| `title` | string | **yes** | Short task title |
-| `description` | string | no | Detailed description |
-| `priority` | string | no | Low / Medium / High / Critical (default Medium) |
-| `employee_id` | int | **yes** | Must point to an existing employee |
-| `project_id` | int | **yes** | Must point to an existing project |
+| `title` | string | yes | |
+| `description` | string | no | |
+| `priority` | string | no | Low / Medium / High / Critical |
+| `employee_id` | int | yes | Must exist |
+| `project_id` | int | yes | Must exist |
 
-New tasks always start with `"status": "Pending"`.
-
----
-
-#### `GET /tasks` — List all tasks
-
-#### `GET /tasks/{id}` — Get one task
-
-#### `PUT /tasks/{id}` — Update task fields
-
-#### `DELETE /tasks/{id}` — Delete task
-
----
-
-#### `POST /tasks/{id}/start` — Start the timer
-
-No body required. Marks the task as **In Progress** and records `start_time`.
-
-**Response**
-```json
-{
-  "id": 1,
-  "title": "Build Login Page",
-  "status": "In Progress",
-  "start_time": "2025-03-10T14:22:05.123456",
-  "end_time": null,
-  "measured_hours": null,
-  ...
-}
+**Task lifecycle:**
 ```
-
-Rules:
-- Returns `400` if the task is already Completed.
-
----
-
-#### `POST /tasks/{id}/stop` — Stop the timer
-
-No body required. Marks the task as **Completed**, records `end_time`, and calculates `measured_hours` automatically.
-
-**Response**
-```json
-{
-  "id": 1,
-  "status": "Completed",
-  "start_time": "2025-03-10T14:22:05.123456",
-  "end_time":   "2025-03-10T16:48:12.456789",
-  "measured_hours": 2.435,
-  ...
-}
+Pending  →  [POST /start]  →  In Progress  →  [POST /stop]  →  Completed
 ```
-
-Rules:
-- Returns `400` if task was never started.
-- Returns `400` if task is already Completed.
+- `start` records `start_time`, fails with `400` if already Completed
+- `stop` records `end_time`, computes `measured_hours = (end_time - start_time) / 3600`, fails with `400` if not started or already Completed
 
 ---
 
 ### Dashboard
 
-#### `GET /dashboard/summary`
+| Method | Route | Description |
+|---|---|---|
+| `GET` | `/dashboard/summary` | Aggregated stats across all data |
 
-Returns a single aggregated view across all data — the main screen for managers.
-
-**Response**
-```json
-{
-  "total_tasks": 12,
-  "tasks_by_status": {
-    "Pending": 5,
-    "In Progress": 3,
-    "Completed": 4
-  },
-  "tasks_by_priority": {
-    "High": 6,
-    "Medium": 4,
-    "Critical": 2
-  },
-  "total_hours_logged": 47.3,
-  "total_employees": 5,
-  "total_projects": 3,
-  "top_employees": [
-    {
-      "employee_id": 1,
-      "employee_name": "Alice Dev",
-      "total_tasks": 5,
-      "completed_tasks": 4,
-      "total_hours": 22.1
-    }
-  ],
-  "project_summaries": [
-    {
-      "project_id": 1,
-      "project_name": "Client Portal v2",
-      "total_tasks": 8,
-      "completed_tasks": 4,
-      "total_hours": 47.3,
-      "budget": 150000.0,
-      "actual_cost": 138000.0
-    }
-  ]
-}
-```
+Response includes: `total_tasks`, `tasks_by_status`, `tasks_by_priority`, `total_hours_logged`, `total_employees`, `total_projects`, `top_employees[]`, `project_summaries[]`
 
 ---
 
 ### ML Prediction
 
-#### `POST /predict` — Estimate task hours before starting
+| Method | Route | Description |
+|---|---|---|
+| `POST` | `/predict` | Predict hours for a task |
+| `GET` | `/model-info` | Model features and accuracy metrics |
 
-Uses the trained RandomForest model to predict how many hours a task will take, based on the employee profile and project context.
+All request fields are optional (sensible defaults used):
 
-**Request body** (all fields optional — defaults are used for anything omitted)
 ```json
 {
   "department": "Technology",
@@ -388,19 +306,15 @@ Uses the trained RandomForest model to predict how many hours a task will take, 
   "Budget": 150000.0,
   "Actual_Cost": 62000.0,
   "Delay_Days": 0,
-  "Cost_Overrun_pct": 0.0,
   "Project_Type": "Web App",
   "Priority": "High",
-  "Priority_Scaled": 3,
   "Tasks_Completed": 4,
   "Productivity_Score": 75.0,
-  "Training_Effectiveness": 3.5,
-  "Experience_Index": 3.0,
   "Workload_Pressure": 0.6
 }
 ```
 
-**Response**
+Response:
 ```json
 {
   "predicted_hours": 102.53,
@@ -409,28 +323,7 @@ Uses the trained RandomForest model to predict how many hours a task will take, 
 }
 ```
 
-| Response field | Meaning |
-|---|---|
-| `predicted_hours` | Estimated hours for the task |
-| `model_mae` | Mean Absolute Error of the model on test data (±3.998 hrs) |
-| `model_rmse` | Root Mean Squared Error (±5.617 hrs) |
-
-Returns `503` if the model has not been trained yet (`python -m backend.ml.train_models`).
-
----
-
-#### `GET /model-info` — Model metadata
-
-Returns what features the model was trained on and its accuracy metrics.
-
-```json
-{
-  "numeric_features": ["no_of_trainings", "age", "previous_year_rating", ...],
-  "categorical_features": ["department", "education", "Project Type", "Priority"],
-  "target": "Hours Spent",
-  "metrics": { "mae": 3.998, "rmse": 5.617 }
-}
-```
+Returns `503` if the model has not been trained yet.
 
 ---
 
@@ -438,47 +331,42 @@ Returns what features the model was trained on and its accuracy metrics.
 
 | Property | Value |
 |---|---|
-| Algorithm | RandomForestRegressor (100 trees) |
-| Target | Hours Spent on a task |
-| Numeric features | 17 (age, ratings, scores, budget, delay days, …) |
+| Algorithm | RandomForestRegressor — 100 trees |
+| Target variable | Hours Spent on a task |
+| Numeric features | 17 |
 | Categorical features | 4 (department, education, project type, priority) |
 | Preprocessing | StandardScaler + OneHotEncoder via ColumnTransformer |
-| Test MAE | **3.998 hours** |
-| Test RMSE | **5.617 hours** |
+| Test MAE | **±3.998 hours** |
+| Test RMSE | **±5.617 hours** |
 | Training data | `final_dataset_with_features.csv` |
 
-Retrain at any time (e.g. after new data arrives):
+Retrain any time (e.g. after onboarding new employees or completing more projects):
 ```powershell
 python -m backend.ml.train_models
 ```
 
 ---
 
-## Running Tests
-
-```powershell
-# All 30 tests
-python -m pytest test/ -v
-
-# API integration tests only
-python -m pytest test/test_api.py -v
-
-# Service unit tests only
-python -m pytest test/test_service.py -v
-```
-
-Expected output: **30 passed, 0 warnings**.
-
-Tests use an isolated in-memory SQLite database — the production `tasks.db` is never touched.
-
----
-
-## Quick Reference — HTTP Status Codes
+## HTTP Status Codes
 
 | Code | Meaning |
 |---|---|
-| `200` | Success |
+| `200` | OK |
 | `201` | Resource created |
-| `400` | Bad request (e.g. stopping a task that was never started) |
+| `400` | Invalid operation (e.g. stopping a task that was never started) |
 | `404` | Resource not found |
 | `503` | ML model not trained yet |
+
+---
+
+## Port Already in Use?
+
+If you see `[WinError 10013]` when starting the server:
+
+```powershell
+# Find and kill what is using port 8000
+Stop-Process -Id (netstat -ano | Select-String ':8000').ToString().Trim().Split()[-1] -Force
+
+# Or just use a different port
+uvicorn backend.app:app --reload --port 8001
+```

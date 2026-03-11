@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TaskFlow — Employee Task Management</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<div id="app-shell">
+
+  <!-- ─── Sidebar ─────────────────────────────────────────────── -->
+  <aside id="sidebar">
+    <div class="brand">
+      <div class="brand-icon"><i class="fa-solid fa-bolt-lightning"></i></div>
+      <div class="brand-text">
+        <span class="brand-name">TaskFlow</span>
+        <span class="brand-sub">Pro</span>
+      </div>
+    </div>
+
+    <div class="nav-section-label">MAIN MENU</div>
+    <nav id="nav">
+      <a class="nav-item active" data-page="dashboard">
+        <i class="fa-solid fa-chart-pie"></i><span>Dashboard</span>
+        <div class="nav-indicator"></div>
+      </a>
+      <a class="nav-item" data-page="employees">
+        <i class="fa-solid fa-users"></i><span>Employees</span>
+        <div class="nav-indicator"></div>
+      </a>
+      <a class="nav-item" data-page="projects">
+        <i class="fa-solid fa-folder-open"></i><span>Projects</span>
+        <div class="nav-indicator"></div>
+      </a>
+      <a class="nav-item" data-page="tasks">
+        <i class="fa-solid fa-list-check"></i><span>Tasks</span>
+        <div class="nav-indicator"></div>
+      </a>
+    </nav>
+
+    <div class="nav-section-label">TOOLS</div>
+    <nav>
+      <a class="nav-item" data-page="predict">
+        <i class="fa-solid fa-wand-magic-sparkles"></i><span>ML Predict</span>
+        <div class="nav-indicator"></div>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="api-status">
+        <span id="status-dot" class="status-dot offline"></span>
+        <span id="status-text">Connecting…</span>
+      </div>
+      <div class="footer-version">v2.0.0</div>
+    </div>
+  </aside>
+
+  <!-- ─── Main area ────────────────────────────────────────────── -->
+  <div id="main-area">
+
+    <header id="top-bar">
+      <div class="top-left">
+        <button id="sidebar-toggle" class="icon-btn"><i class="fa-solid fa-bars"></i></button>
+        <h1 id="page-title">Dashboard</h1>
+      </div>
+      <div class="top-right">
+        <button id="refresh-btn" class="icon-btn" title="Refresh data">
+          <i class="fa-solid fa-rotate-right"></i>
+        </button>
+        <div id="header-cta"></div>
+      </div>
+    </header>
+
+    <main id="page-content">
+      <div class="loading-screen">
+        <div class="spinner-large"></div>
+        <p>Loading TaskFlow…</p>
+      </div>
+    </main>
+
+  </div>
+</div>
+
+<!-- ─── Modal ────────────────────────────────────────────────────── -->
+<div id="modal-backdrop" class="hidden" role="dialog" aria-modal="true">
+  <div id="modal-box">
+    <div id="modal-header">
+      <h3 id="modal-title"></h3>
+      <button id="modal-close" class="icon-btn"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<!-- ─── Toast container ──────────────────────────────────────────── -->
+<div id="toast-container" aria-live="polite"></div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

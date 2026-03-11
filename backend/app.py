@@ -52,10 +52,27 @@ app.add_middleware(
 )
 
 
-# ── Health check ──────────────────────────────────────────────────────────────
+# ── Root → serve frontend ─────────────────────────────────────────────────────
 
-@app.get("/", tags=["Health"])
+from pathlib import Path
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
+_FRONTEND = Path(__file__).resolve().parent.parent / "frontend"
+
+if _FRONTEND.exists():
+    app.mount("/static", StaticFiles(directory=str(_FRONTEND)), name="static")
+
+@app.get("/", include_in_schema=False)
 def root():
+    if _FRONTEND.exists():
+        return FileResponse(str(_FRONTEND / "index.html"))
+    return {"status": "ok", "message": "Employee Task & Time Management API v2.0"}
+
+# ── Health check (JSON) ───────────────────────────────────────────────────────
+
+@app.get("/health", tags=["Health"])
+def health():
     return {"status": "ok", "message": "Employee Task & Time Management API v2.0"}
 
 
